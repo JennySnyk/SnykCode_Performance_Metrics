@@ -1,0 +1,75 @@
+# Configuration Example for Snyk Code Performance Metrics
+# Copy this file to 'config' and customize as needed
+
+# Snyk CLI Options (can be added to the script)
+# Uncomment and modify as needed:
+
+# SNYK_TIMEOUT=300
+# Timeout for Snyk scan in seconds (default: 300)
+
+# SNYK_SEVERITY_THRESHOLD=low
+# Only report issues with severity >= threshold (low|medium|high|critical)
+
+# SNYK_JSON_OUTPUT=true
+# Always output in JSON format (default: false)
+
+# Excluded directories for line counting
+# Add more directories to exclude (comma-separated)
+EXCLUDED_DIRS="node_modules,.git,vendor,dist,build,coverage,.next,out,target"
+
+# File extensions to count (space-separated)
+FILE_EXTENSIONS="*.py *.js *.ts *.tsx *.jsx *.java *.c *.cpp *.cs *.go *.rb *.php *.swift *.kt *.rs *.scala *.m *.h *.sh"
+
+# Output Settings
+DEFAULT_OUTPUT_DIR="./metrics"
+# Directory to store metrics output files
+
+TIMESTAMP_FORMAT="%Y%m%d_%H%M%S"
+# Format for timestamp in output filenames
+
+# Performance Thresholds (for alerting)
+SLOW_SCAN_THRESHOLD=120
+# Alert if scan takes more than this many seconds
+
+MIN_PERFORMANCE_RATIO=100
+# Alert if LOC/second falls below this threshold
+
+# Reporting
+INCLUDE_TIMESTAMP=true
+# Include timestamp in output
+
+INCLUDE_REPO_INFO=true
+# Include repository information in output
+
+INCLUDE_SNYK_RESULTS=true
+# Include Snyk vulnerability results in output
+
+# Advanced Options
+VERBOSE=false
+# Enable verbose output for debugging
+
+QUIET=false
+# Suppress informational messages
+
+COLOR_OUTPUT=true
+# Enable colored console output
+
+# Integration Settings
+WEBHOOK_URL=""
+# Optional: Send metrics to webhook endpoint
+
+METRICS_DATABASE=""
+# Optional: Database connection string for storing metrics
+
+# Notification Settings
+SLACK_WEBHOOK=""
+# Optional: Slack webhook for notifications
+
+EMAIL_ALERTS=""
+# Optional: Email address for alerts
+
+# Notes:
+# - These are example configurations
+# - The main script would need to be modified to read these values
+# - You can use these as environment variables or integrate into the script
+

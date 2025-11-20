@@ -1,0 +1,40 @@
+# Metrics output files
+metrics_*.json
+metrics_*.txt
+results_*.json
+results_*.txt
+metrics/
+metrics_history/
+
+# Temporary files
+*.tmp
+.DS_Store
+temp_metrics.json
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if any)
+node_modules/
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS files
+.DS_Store
+Thumbs.db
+
