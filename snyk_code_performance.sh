@@ -72,10 +72,15 @@ Examples:
     $0 -j -o results.json           # Output JSON to file
     $0 --json /path/to/repo         # Scan specific directory with JSON output
 
+Metrics Explained:
+    - Scan Duration: Time taken by Snyk Code test
+    - Lines of Code: Total LOC in repository (not just scanned files)
+    - Performance Ratio: Total LOC ÷ Scan duration (LOC/second)
+    
 Requirements:
-    - Snyk CLI: npm install -g snyk
-    - cloc: brew install cloc
-    - jq: brew install jq
+    - Snyk CLI: npm install -g snyk (or see docs.snyk.io for Windows)
+    - cloc: brew install cloc (macOS) | choco install cloc (Windows)
+    - jq: brew install jq (macOS) | choco install jq (Windows)
 
 EOF
     exit 0
