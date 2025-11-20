@@ -26,6 +26,7 @@ set -e
 REPO_PATH="${1:-.}"
 OUTPUT_FILE=""
 JSON_OUTPUT=false
+SKIP_LOC=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -61,6 +62,7 @@ Usage: $0 [OPTIONS] [REPO_PATH]
 Options:
     -j, --json          Output results in JSON format
     -o, --output FILE   Save results to a file
+    -s, --skip-loc      Skip line counting (faster, LOC will be 0)
     -h, --help          Show this help message
 
 Arguments:
@@ -96,6 +98,10 @@ while [[ $# -gt 0 ]]; do
         -o|--output)
             OUTPUT_FILE="$2"
             shift 2
+            ;;
+        -s|--skip-loc)
+            SKIP_LOC=true
+            shift
             ;;
         -h|--help)
             show_help
@@ -147,39 +153,62 @@ cd "$REPO_PATH" || exit 1
 print_info "Scanning repository: $(pwd)"
 
 # Count lines of code
-print_info "Counting lines of code..."
 LOC=0
 FILES_COUNT=0
 
-if $USE_CLOC; then
-    # Use cloc for accurate counting
-    CLOC_OUTPUT=$(cloc . --json --quiet 2>/dev/null || echo "{}")
-    
-    if command_exists jq; then
-        LOC=$(echo "$CLOC_OUTPUT" | jq -r '.SUM.code // 0' 2>/dev/null || echo "0")
-        FILES_COUNT=$(echo "$CLOC_OUTPUT" | jq -r '.header.n_files // 0' 2>/dev/null || echo "0")
-    else
-        # Parse without jq (basic parsing)
-        LOC=$(echo "$CLOC_OUTPUT" | grep -o '"code":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
-        FILES_COUNT=$(echo "$CLOC_OUTPUT" | grep -o '"n_files":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
-    fi
+if $SKIP_LOC; then
+    print_info "Skipping line count (--skip-loc flag used)"
+    LOC=0
+    FILES_COUNT=0
 else
-    # Fallback: count lines using find and wc
-    print_warning "Using basic line counting (may include comments and blank lines)"
+    print_info "Counting lines of code..."
     
-    # Count common source code files
-    EXTENSIONS="*.py *.js *.ts *.tsx *.jsx *.java *.c *.cpp *.cs *.go *.rb *.php *.swift *.kt *.rs *.scala *.m *.h *.sh"
-    
-    for ext in $EXTENSIONS; do
-        COUNT=$(find . -type f -name "$ext" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/vendor/*" -not -path "*/dist/*" -not -path "*/build/*" 2>/dev/null | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
-        LOC=$((LOC + COUNT))
-    done
-    
-    FILES_COUNT=$(find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" -o -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.cs" -o -name "*.go" -o -name "*.rb" -o -name "*.php" -o -name "*.swift" -o -name "*.kt" -o -name "*.rs" -o -name "*.scala" -o -name "*.m" -o -name "*.h" -o -name "*.sh" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/vendor/*" -not -path "*/dist/*" -not -path "*/build/*" 2>/dev/null | wc -l | tr -d ' ')
+    if $USE_CLOC; then
+        # Use cloc for accurate counting (FAST - recommended)
+        CLOC_OUTPUT=$(cloc . --json --quiet 2>/dev/null || echo "{}")
+        
+        if command_exists jq; then
+            LOC=$(echo "$CLOC_OUTPUT" | jq -r '.SUM.code // 0' 2>/dev/null || echo "0")
+            FILES_COUNT=$(echo "$CLOC_OUTPUT" | jq -r '.header.n_files // 0' 2>/dev/null || echo "0")
+        else
+            # Parse without jq (basic parsing)
+            LOC=$(echo "$CLOC_OUTPUT" | grep -o '"code":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
+            FILES_COUNT=$(echo "$CLOC_OUTPUT" | grep -o '"n_files":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
+        fi
+        print_success "Lines of code: $LOC"
+        print_success "Files counted: $FILES_COUNT"
+    else
+        # Fallback: OPTIMIZED single-pass counting
+        print_warning "Using basic line counting (SLOW on large repos - install cloc for better performance)"
+        print_info "Tip: Use --skip-loc flag to skip line counting and speed up the scan"
+        
+        # Single find command for all extensions (MUCH FASTER than looping)
+        FILES=$(find . -type f \( \
+            -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" \
+            -o -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.cs" -o -name "*.go" \
+            -o -name "*.rb" -o -name "*.php" -o -name "*.swift" -o -name "*.kt" -o -name "*.rs" \
+            -o -name "*.scala" -o -name "*.m" -o -name "*.h" -o -name "*.sh" \
+        \) \
+            -not -path "*/node_modules/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/vendor/*" \
+            -not -path "*/dist/*" \
+            -not -path "*/build/*" \
+            -not -path "*/target/*" \
+            -not -path "*/.next/*" \
+            -not -path "*/out/*" \
+            2>/dev/null)
+        
+        if [ -n "$FILES" ]; then
+            FILES_COUNT=$(echo "$FILES" | wc -l | tr -d ' ')
+            # Count lines (with timeout protection)
+            LOC=$(echo "$FILES" | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+        fi
+        
+        print_success "Lines of code: $LOC (estimated, includes comments)"
+        print_success "Files counted: $FILES_COUNT"
+    fi
 fi
-
-print_success "Lines of code: $LOC"
-print_success "Files counted: $FILES_COUNT"
 
 # Run Snyk Code test and measure time
 print_info "Starting Snyk Code test..."

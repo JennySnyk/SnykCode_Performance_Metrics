@@ -150,6 +150,9 @@ bash snyk_code_performance.sh
 # JSON output to file
 ./snyk_code_performance.sh --json --output metrics.json /path/to/repo
 
+# Fast scan (skip line counting) - recommended for large repos
+./snyk_code_performance.sh --skip-loc /path/to/repo
+
 # View help
 ./snyk_code_performance.sh --help
 ```
@@ -161,6 +164,7 @@ bash snyk_code_performance.sh
 | `-h, --help` | Show help message |
 | `-j, --json` | Output results in JSON format |
 | `-o, --output FILE` | Save results to a file |
+| `-s, --skip-loc` | Skip line counting (faster, LOC will be 0) |
 
 ## 📊 Output Examples
 
@@ -295,18 +299,35 @@ You need a bash environment:
 2. Open **Git Bash** terminal
 3. Run the script: `bash snyk_code_performance.sh`
 
+### Line counting is very slow (large repositories)
+
+**Problem**: Without cloc, line counting can be slow on large repos (like juice-shop)
+
+**Solutions**:
+
+1. **Install cloc** (FASTEST - highly recommended):
+   ```bash
+   brew install cloc        # macOS
+   choco install cloc       # Windows
+   sudo apt install cloc    # Linux
+   npm install -g cloc      # All platforms
+   ```
+
+2. **Skip line counting** (when you only care about scan time):
+   ```bash
+   ./snyk_code_performance.sh --skip-loc /path/to/repo
+   ```
+
+3. **Use both** for best results:
+   - Install cloc for accurate, fast counting
+   - Use --skip-loc when you don't need LOC metrics
+
+> **Performance tip**: cloc is 10-50x faster than the fallback method!
+
 ### Scan is slow
 - Large repositories take longer
 - First scan downloads Snyk rules (slower)
 - Subsequent scans are faster due to caching
-
-### Line count seems low
-Install `cloc` for accurate counting:
-```bash
-brew install cloc        # macOS
-choco install cloc       # Windows
-sudo apt install cloc    # Linux
-```
 
 ## 📝 Supported File Types
 
@@ -350,6 +371,8 @@ This project is provided as-is for performance monitoring purposes.
 5. **Authenticate once**: `snyk auth` only needs to be done once per machine
 6. **Windows users**: Use Git Bash for the easiest experience
 7. **Understanding metrics**: The performance ratio uses total repository LOC, not just scanned files
+8. **Large repositories**: Use `--skip-loc` to skip line counting and speed up the scan significantly
+9. **Install cloc**: Makes line counting 10-50x faster - highly recommended for regular use
 
 ---
 
