@@ -22,11 +22,6 @@ echo "[INFO] Checking prerequisites..."
 sleep 1
 echo "[INFO] Scanning repository: /home/user/projects/sample-app"
 sleep 1
-echo "[INFO] Counting lines of code..."
-sleep 1
-echo "[SUCCESS] Lines of code: 8,450"
-echo "[SUCCESS] Files counted: 127"
-sleep 1
 echo "[INFO] Starting Snyk Code test..."
 echo "[INFO] This may take a few minutes depending on repository size..."
 sleep 2
@@ -46,9 +41,6 @@ Repository Path:        /home/user/projects/sample-app
 Performance Metrics:
 --------------------
 Scan Duration:          23 seconds (23456ms)
-Lines of Code:          8,450
-Files Scanned:          127
-Performance Ratio:      367.39 LOC/second
 
 Snyk Code Results:
 ------------------
@@ -79,9 +71,7 @@ cat << 'EOF'
   },
   "metrics": {
     "scan_duration_seconds": 23,
-    "scan_duration_milliseconds": 23456,
-    "lines_of_code": 8450,
-    "files_scanned": 127
+    "scan_duration_milliseconds": 23456
   },
   "snyk_results": {
     "exit_code": 1,
@@ -96,8 +86,7 @@ EOF
 echo ""
 echo ""
 echo "✨ Key Insights from this scan:"
-echo "   • Performance: 367 lines of code analyzed per second"
-echo "   • Total scan time: 23 seconds for 8,450 lines"
+echo "   • Total scan time: 23 seconds"
 echo "   • Found 6 security issues (2 high, 3 medium, 1 low)"
 echo ""
 echo "💡 Next Steps:"

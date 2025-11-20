@@ -13,13 +13,6 @@
 # SNYK_JSON_OUTPUT=true
 # Always output in JSON format (default: false)
 
-# Excluded directories for line counting
-# Add more directories to exclude (comma-separated)
-EXCLUDED_DIRS="node_modules,.git,vendor,dist,build,coverage,.next,out,target"
-
-# File extensions to count (space-separated)
-FILE_EXTENSIONS="*.py *.js *.ts *.tsx *.jsx *.java *.c *.cpp *.cs *.go *.rb *.php *.swift *.kt *.rs *.scala *.m *.h *.sh"
-
 # Output Settings
 DEFAULT_OUTPUT_DIR="./metrics"
 # Directory to store metrics output files
@@ -30,9 +23,6 @@ TIMESTAMP_FORMAT="%Y%m%d_%H%M%S"
 # Performance Thresholds (for alerting)
 SLOW_SCAN_THRESHOLD=120
 # Alert if scan takes more than this many seconds
-
-MIN_PERFORMANCE_RATIO=100
-# Alert if LOC/second falls below this threshold
 
 # Reporting
 INCLUDE_TIMESTAMP=true

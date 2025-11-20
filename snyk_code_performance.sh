@@ -5,7 +5,7 @@
 # 
 # This script measures:
 # - Time taken for 'snyk code test' scan
-# - Number of lines of code in the repository
+# - Vulnerabilities found by severity
 # 
 # Usage: ./snyk_code_performance.sh [OPTIONS] [REPO_PATH]
 #
@@ -16,8 +16,7 @@
 #
 # Requirements:
 #   - Snyk CLI (install: npm install -g snyk)
-#   - cloc (install: brew install cloc)
-#   - jq for JSON parsing (install: brew install jq)
+#   - jq for JSON parsing (install: brew install jq) - optional
 ################################################################################
 
 set -e
@@ -26,7 +25,6 @@ set -e
 REPO_PATH="${1:-.}"
 OUTPUT_FILE=""
 JSON_OUTPUT=false
-SKIP_LOC=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -62,7 +60,6 @@ Usage: $0 [OPTIONS] [REPO_PATH]
 Options:
     -j, --json          Output results in JSON format
     -o, --output FILE   Save results to a file
-    -s, --skip-loc      Skip line counting (faster, LOC will be 0)
     -h, --help          Show this help message
 
 Arguments:
@@ -75,14 +72,12 @@ Examples:
     $0 --json /path/to/repo         # Scan specific directory with JSON output
 
 Metrics Explained:
-    - Scan Duration: Time taken by Snyk Code test
-    - Lines of Code: Total LOC in repository (not just scanned files)
-    - Performance Ratio: Total LOC ÷ Scan duration (LOC/second)
+    - Scan Duration: Time taken by Snyk Code test (seconds and milliseconds)
+    - Vulnerabilities: Issues found by severity (High, Medium, Low)
     
 Requirements:
     - Snyk CLI: npm install -g snyk (or see docs.snyk.io for Windows)
-    - cloc: brew install cloc (macOS) | choco install cloc (Windows)
-    - jq: brew install jq (macOS) | choco install jq (Windows)
+    - jq: brew install jq (optional, for parsing vulnerability details)
 
 EOF
     exit 0
@@ -98,10 +93,6 @@ while [[ $# -gt 0 ]]; do
         -o|--output)
             OUTPUT_FILE="$2"
             shift 2
-            ;;
-        -s|--skip-loc)
-            SKIP_LOC=true
-            shift
             ;;
         -h|--help)
             show_help
@@ -130,17 +121,9 @@ if ! command_exists snyk; then
     exit 1
 fi
 
-if ! command_exists cloc; then
-    print_warning "cloc is not installed. Install it with: brew install cloc"
-    print_info "Attempting to count lines of code using alternative method..."
-    USE_CLOC=false
-else
-    USE_CLOC=true
-fi
-
-if ! command_exists jq && $USE_CLOC; then
+if ! command_exists jq; then
     print_warning "jq is not installed. Install it with: brew install jq"
-    print_info "Will parse cloc output without jq..."
+    print_info "Will parse Snyk output without jq (limited vulnerability details)..."
 fi
 
 # Verify repository path
@@ -151,64 +134,6 @@ fi
 
 cd "$REPO_PATH" || exit 1
 print_info "Scanning repository: $(pwd)"
-
-# Count lines of code
-LOC=0
-FILES_COUNT=0
-
-if $SKIP_LOC; then
-    print_info "Skipping line count (--skip-loc flag used)"
-    LOC=0
-    FILES_COUNT=0
-else
-    print_info "Counting lines of code..."
-    
-    if $USE_CLOC; then
-        # Use cloc for accurate counting (FAST - recommended)
-        CLOC_OUTPUT=$(cloc . --json --quiet 2>/dev/null || echo "{}")
-        
-        if command_exists jq; then
-            LOC=$(echo "$CLOC_OUTPUT" | jq -r '.SUM.code // 0' 2>/dev/null || echo "0")
-            FILES_COUNT=$(echo "$CLOC_OUTPUT" | jq -r '.header.n_files // 0' 2>/dev/null || echo "0")
-        else
-            # Parse without jq (basic parsing)
-            LOC=$(echo "$CLOC_OUTPUT" | grep -o '"code":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
-            FILES_COUNT=$(echo "$CLOC_OUTPUT" | grep -o '"n_files":[0-9]*' | head -1 | cut -d':' -f2 || echo "0")
-        fi
-        print_success "Lines of code: $LOC"
-        print_success "Files counted: $FILES_COUNT"
-    else
-        # Fallback: OPTIMIZED single-pass counting
-        print_warning "Using basic line counting (SLOW on large repos - install cloc for better performance)"
-        print_info "Tip: Use --skip-loc flag to skip line counting and speed up the scan"
-        
-        # Single find command for all extensions (MUCH FASTER than looping)
-        FILES=$(find . -type f \( \
-            -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" \
-            -o -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.cs" -o -name "*.go" \
-            -o -name "*.rb" -o -name "*.php" -o -name "*.swift" -o -name "*.kt" -o -name "*.rs" \
-            -o -name "*.scala" -o -name "*.m" -o -name "*.h" -o -name "*.sh" \
-        \) \
-            -not -path "*/node_modules/*" \
-            -not -path "*/.git/*" \
-            -not -path "*/vendor/*" \
-            -not -path "*/dist/*" \
-            -not -path "*/build/*" \
-            -not -path "*/target/*" \
-            -not -path "*/.next/*" \
-            -not -path "*/out/*" \
-            2>/dev/null)
-        
-        if [ -n "$FILES" ]; then
-            FILES_COUNT=$(echo "$FILES" | wc -l | tr -d ' ')
-            # Count lines (with timeout protection)
-            LOC=$(echo "$FILES" | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
-        fi
-        
-        print_success "Lines of code: $LOC (estimated, includes comments)"
-        print_success "Files counted: $FILES_COUNT"
-    fi
-fi
 
 # Run Snyk Code test and measure time
 print_info "Starting Snyk Code test..."
@@ -275,9 +200,7 @@ if $JSON_OUTPUT; then
   },
   "metrics": {
     "scan_duration_seconds": $DURATION,
-    "scan_duration_milliseconds": $DURATION_MS,
-    "lines_of_code": $LOC,
-    "files_scanned": $FILES_COUNT
+    "scan_duration_milliseconds": $DURATION_MS
   },
   "snyk_results": {
     "exit_code": $SNYK_EXIT_CODE,
@@ -311,9 +234,6 @@ Repository Path:        $(pwd)
 Performance Metrics:
 --------------------
 Scan Duration:          ${DURATION} seconds (${DURATION_MS}ms)
-Lines of Code:          $LOC
-Files Scanned:          $FILES_COUNT
-Performance Ratio:      $(echo "scale=2; $LOC / $DURATION" | bc 2>/dev/null || echo "N/A") LOC/second
 
 Snyk Code Results:
 ------------------
@@ -337,9 +257,6 @@ Repository Path: $(pwd)
 
 Performance Metrics:
 - Scan Duration: ${DURATION} seconds (${DURATION_MS}ms)
-- Lines of Code: $LOC
-- Files Scanned: $FILES_COUNT
-- Performance Ratio: $(echo "scale=2; $LOC / $DURATION" | bc 2>/dev/null || echo "N/A") LOC/second
 
 Snyk Code Results:
 - Total Issues: $ISSUES_FOUND

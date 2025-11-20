@@ -81,26 +81,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     print_info "Checking Homebrew..."
     if ! command_exists brew; then
         print_warning "Homebrew not found. Install it from: https://brew.sh/"
-        print_info "You can still use the script, but cloc won't be installed automatically"
+        print_info "You can still use the script, but jq won't be installed automatically"
     else
         BREW_VERSION=$(brew --version | head -1)
         print_success "Homebrew found"
-        
-        # Install cloc
-        print_info "Checking cloc..."
-        if ! command_exists cloc; then
-            print_warning "cloc not found. Installing via Homebrew..."
-            brew install cloc
-            
-            if command_exists cloc; then
-                print_success "cloc installed successfully"
-            else
-                print_warning "Failed to install cloc. The script will use fallback counting."
-            fi
-        else
-            CLOC_VERSION=$(cloc --version | head -1)
-            print_success "cloc found: $CLOC_VERSION"
-        fi
         
         # Install jq
         print_info "Checking jq..."
@@ -119,8 +103,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         fi
     fi
 else
-    print_warning "Not running on macOS. Please install cloc and jq manually:"
-    echo "  - cloc: https://github.com/AlDanial/cloc"
+    print_warning "Not running on macOS. Please install jq manually:"
     echo "  - jq: https://stedolan.github.io/jq/"
 fi
 
@@ -142,12 +125,6 @@ if command_exists snyk; then
 else
     echo "❌ Snyk CLI: Not installed"
     ALL_GOOD=false
-fi
-
-if command_exists cloc; then
-    echo "✅ cloc: Installed"
-else
-    echo "⚠️  cloc: Not installed (optional, but recommended)"
 fi
 
 if command_exists jq; then

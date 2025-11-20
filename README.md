@@ -6,10 +6,8 @@ A simple bash script to measure Snyk Code scan performance and capture key metri
 
 This script captures:
 - ⏱️ **Scan Duration** - Time taken for Snyk Code test (seconds and milliseconds)
-- 📊 **Lines of Code** - Total code lines in your repository
-- 📁 **Files Scanned** - Number of source files analyzed
 - 🐛 **Vulnerabilities Found** - Issues by severity (High, Medium, Low)
-- 📈 **Performance Ratio** - Lines of code processed per second
+- 📊 **Exit Code** - Scan result status
 
 ## 📋 Prerequisites
 
@@ -37,27 +35,9 @@ snyk auth
 
 > 📖 **Full installation guide**: https://docs.snyk.io/snyk-cli/install-or-update-the-snyk-cli
 
-### Recommended (for accurate line counting)
+### Recommended
 
-**cloc** - Count Lines of Code tool
-```bash
-# macOS
-brew install cloc
-
-# Linux (Debian/Ubuntu)
-sudo apt-get install cloc
-
-# Linux (RHEL/CentOS)
-sudo yum install cloc
-
-# Windows (using Chocolatey)
-choco install cloc
-
-# Windows (using npm - works on all platforms)
-npm install -g cloc
-```
-
-**jq** - JSON processor (for parsing Snyk results)
+**jq** - JSON processor (for parsing Snyk vulnerability details)
 ```bash
 # macOS
 brew install jq
@@ -72,7 +52,7 @@ choco install jq
 scoop install jq
 ```
 
-> **Note**: The script works without cloc and jq, but uses fallback methods with reduced accuracy.
+> **Note**: The script works without jq, but vulnerability breakdown by severity will be limited.
 
 ### Running on Windows
 
@@ -150,9 +130,6 @@ bash snyk_code_performance.sh
 # JSON output to file
 ./snyk_code_performance.sh --json --output metrics.json /path/to/repo
 
-# Fast scan (skip line counting) - recommended for large repos
-./snyk_code_performance.sh --skip-loc /path/to/repo
-
 # View help
 ./snyk_code_performance.sh --help
 ```
@@ -164,7 +141,6 @@ bash snyk_code_performance.sh
 | `-h, --help` | Show help message |
 | `-j, --json` | Output results in JSON format |
 | `-o, --output FILE` | Save results to a file |
-| `-s, --skip-loc` | Skip line counting (faster, LOC will be 0) |
 
 ## 📊 Output Examples
 
@@ -182,9 +158,6 @@ Repository Path:        /home/user/projects/my-project
 Performance Metrics:
 --------------------
 Scan Duration:          12 seconds (12345ms)
-Lines of Code:          8,500
-Files Scanned:          156
-Performance Ratio:      708.33 LOC/second
 
 Snyk Code Results:
 ------------------
@@ -209,9 +182,7 @@ Exit Code:              1
   },
   "metrics": {
     "scan_duration_seconds": 12,
-    "scan_duration_milliseconds": 12345,
-    "lines_of_code": 8500,
-    "files_scanned": 156
+    "scan_duration_milliseconds": 12345
   },
   "snyk_results": {
     "exit_code": 1,
@@ -253,23 +224,8 @@ done
 
 ### Scan Duration
 - Time taken for Snyk Code to analyze your code
+- Measured in both seconds and milliseconds for precision
 - Varies based on repository size and complexity
-
-### Lines of Code (LOC)
-- Total lines of actual code (excludes comments and blank lines when cloc is used)
-- Supports: JavaScript, TypeScript, Python, Java, C/C++, Go, Ruby, PHP, and more
-
-### Performance Ratio (LOC/second)
-- **Calculation**: Total lines of code in repository ÷ Scan duration
-- This represents the overall scan throughput
-- **Important**: This is the **total LOC in your repository**, not just the files Snyk scanned
-- **Typical**: 100-500 LOC/second
-- Useful for:
-  - Capacity planning
-  - Performance tracking over time
-  - Comparing scan speeds across different repositories
-  
-> **Note**: Snyk Code intelligently selects which files to scan based on language support and security relevance. The performance ratio uses your repository's total LOC as a baseline metric for comparison purposes.
 
 ### Vulnerability Severity
 - **High**: Requires immediate attention
@@ -299,54 +255,10 @@ You need a bash environment:
 2. Open **Git Bash** terminal
 3. Run the script: `bash snyk_code_performance.sh`
 
-### Line counting is very slow (large repositories)
-
-**Problem**: Without cloc, line counting can be slow on large repos (like juice-shop)
-
-**Solutions**:
-
-1. **Install cloc** (FASTEST - highly recommended):
-   ```bash
-   brew install cloc        # macOS
-   choco install cloc       # Windows
-   sudo apt install cloc    # Linux
-   npm install -g cloc      # All platforms
-   ```
-
-2. **Skip line counting** (when you only care about scan time):
-   ```bash
-   ./snyk_code_performance.sh --skip-loc /path/to/repo
-   ```
-
-3. **Use both** for best results:
-   - Install cloc for accurate, fast counting
-   - Use --skip-loc when you don't need LOC metrics
-
-> **Performance tip**: cloc is 10-50x faster than the fallback method!
-
 ### Scan is slow
 - Large repositories take longer
 - First scan downloads Snyk rules (slower)
 - Subsequent scans are faster due to caching
-
-## 📝 Supported File Types
-
-The script counts these source code file types:
-- JavaScript/TypeScript (`.js`, `.ts`, `.tsx`, `.jsx`)
-- Python (`.py`)
-- Java (`.java`)
-- C/C++ (`.c`, `.cpp`, `.h`)
-- C# (`.cs`)
-- Go (`.go`)
-- Ruby (`.rb`)
-- PHP (`.php`)
-- Swift (`.swift`)
-- Kotlin (`.kt`)
-- Rust (`.rs`)
-- Scala (`.scala`)
-- Shell (`.sh`)
-
-Automatically excludes: `node_modules/`, `.git/`, `vendor/`, `dist/`, `build/`
 
 ## 🤝 Contributing
 
@@ -370,9 +282,7 @@ This project is provided as-is for performance monitoring purposes.
 4. **Track trends**: Save metrics over time to identify performance patterns
 5. **Authenticate once**: `snyk auth` only needs to be done once per machine
 6. **Windows users**: Use Git Bash for the easiest experience
-7. **Understanding metrics**: The performance ratio uses total repository LOC, not just scanned files
-8. **Large repositories**: Use `--skip-loc` to skip line counting and speed up the scan significantly
-9. **Install cloc**: Makes line counting 10-50x faster - highly recommended for regular use
+7. **Install jq**: Enables detailed vulnerability parsing and better JSON handling
 
 ---
 
