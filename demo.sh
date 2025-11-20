@@ -20,7 +20,7 @@ EOF
 
 echo "[INFO] Checking prerequisites..."
 sleep 1
-echo "[INFO] Scanning repository: /Users/demo/projects/sample-app"
+echo "[INFO] Scanning repository: /home/user/projects/sample-app"
 sleep 1
 echo "[INFO] Counting lines of code..."
 sleep 1
@@ -41,7 +41,7 @@ cat << 'EOF'
 
 Timestamp:              2025-11-20T15:45:30Z
 Repository:             sample-app
-Repository Path:        /Users/demo/projects/sample-app
+Repository Path:        /home/user/projects/sample-app
 
 Performance Metrics:
 --------------------
@@ -75,7 +75,7 @@ cat << 'EOF'
   "timestamp": "2025-11-20T15:45:30Z",
   "repository": {
     "name": "sample-app",
-    "path": "/Users/demo/projects/sample-app"
+    "path": "/home/user/projects/sample-app"
   },
   "metrics": {
     "scan_duration_seconds": 23,

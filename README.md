@@ -173,7 +173,7 @@ bash snyk_code_performance.sh
 
 Timestamp:              2025-11-20T15:30:45Z
 Repository:             my-project
-Repository Path:        /Users/jenny/projects/my-project
+Repository Path:        /home/user/projects/my-project
 
 Performance Metrics:
 --------------------
@@ -201,7 +201,7 @@ Exit Code:              1
   "timestamp": "2025-11-20T15:30:45Z",
   "repository": {
     "name": "my-project",
-    "path": "/Users/jenny/projects/my-project"
+    "path": "/home/user/projects/my-project"
   },
   "metrics": {
     "scan_duration_seconds": 12,
